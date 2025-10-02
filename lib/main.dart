@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'router/app_router.dart';
+import 'package:steam_games/router/app_router.dart';
 
 void main() {
   runApp(const ProviderScope(child: SteamGameApp()));

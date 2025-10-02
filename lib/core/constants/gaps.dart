@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'sizes.dart';
+
+import 'package:steam_games/core/constants/sizes.dart';
 
 class Gaps {
   static const v1 = SizedBox(height: Sizes.size1);
