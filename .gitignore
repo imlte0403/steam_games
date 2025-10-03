@@ -148,3 +148,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Steam API keys
+.steam_api_key
+steam_api_key.json
+steam_api_key.txt

@@ -30,6 +30,8 @@ class GameModel {
     required this.totalPositive,
     required this.totalNegative,
     required this.totalReviews,
+    this.ratingScore,
+    this.playerCount,
   });
 
   final String appId;
@@ -60,4 +62,8 @@ class GameModel {
   final int totalPositive;
   final int totalNegative;
   final int totalReviews;
+
+  // New fields
+  final double? ratingScore; // 0.0 ~ 5.0 별점
+  final String? playerCount; // 플레이어 수 (예: "10K+", "100K+")
 }

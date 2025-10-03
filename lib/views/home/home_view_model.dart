@@ -1,4 +1,4 @@
-import 'dart:async';
+//import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,8 +20,8 @@ class HomeSections {
 }
 
 final homeSectionsProvider = FutureProvider<HomeSections>((ref) async {
-  await Future<void>.delayed(const Duration(milliseconds: 300));
-  final games = ref.read(gameListProvider);
+  // API에서 게임 목록 가져오기
+  final games = await ref.watch(gameListProvider.future);
 
   final discounted = games.where((game) => game.discountPercent > 0).toList();
   final freeToPlay = games.where((game) => game.isFree).toList();
@@ -31,7 +31,7 @@ final homeSectionsProvider = FutureProvider<HomeSections>((ref) async {
       .toList();
 
   return HomeSections(
-    popular: games.take(30).toList(),
+    popular: games,
     discounted: discounted,
     freeToPlay: freeToPlay,
     newReleases: newReleases,

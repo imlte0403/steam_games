@@ -20,6 +20,44 @@ class SteamGameApp extends ConsumerWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        textTheme: const TextTheme(
+          // 섹션 제목
+          titleLarge: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+          // 게임 제목 (카드)
+          titleMedium: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+          titleSmall: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          // 가격 (현재가)
+          headlineSmall: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          // 가격 (작은 카드)
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          // 원가 (취소선)
+          bodySmall: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.normal,
+          ),
+          // 추가 정보
+          labelMedium: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.normal,
+          ),
+        ),
       ),
     );
   }

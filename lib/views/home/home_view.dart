@@ -6,7 +6,11 @@ import 'package:steam_games/core/constants/gaps.dart';
 import 'package:steam_games/core/constants/sizes.dart';
 import 'package:steam_games/router/app_router.dart';
 import 'package:steam_games/views/home/home_view_model.dart';
+import 'package:steam_games/data/models/game_model.dart';
+import 'package:steam_games/views/home/widgets/game_grid_section.dart';
 import 'package:steam_games/views/home/widgets/game_section.dart';
+import 'package:steam_games/views/home/widgets/popular_highlights.dart';
+import 'package:steam_games/widgets/shimmer_loading.dart';
 
 class HomeView extends ConsumerWidget {
   const HomeView({super.key});
@@ -44,45 +48,39 @@ class HomeView extends ConsumerWidget {
         ],
       ),
       body: sections.when(
-        data: (data) => RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(homeSectionsProvider);
-            await ref.read(homeSectionsProvider.future);
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: Sizes.size16,
-              vertical: Sizes.size24,
+        data: (data) {
+          final sectionConfigs = _buildSections(
+            context,
+            data,
+            (game) => _openDetail(context, game.appId),
+          );
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(homeSectionsProvider);
+              await ref.read(homeSectionsProvider.future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(Sizes.size20),
+              children: [
+                if (data.popular.isNotEmpty) ...[
+                  PopularHighlights(
+                    games: data.popular,
+                    onGameTap: (game) => _openDetail(context, game.appId),
+                  ),
+                  if (sectionConfigs.isNotEmpty) Gaps.v40,
+                ],
+                for (var i = 0; i < sectionConfigs.length; i++) ...[
+                  sectionConfigs[i],
+                  if (i != sectionConfigs.length - 1) Gaps.v40,
+                ],
+                Gaps.v20,
+              ],
             ),
-            children: [
-              GameSection(
-                title: 'Popular Games',
-                games: data.popular,
-                onGameTap: (game) => _openDetail(context, game.appId),
-              ),
-              Gaps.v32,
-              GameSection(
-                title: 'Discounted Picks',
-                games: data.discounted,
-                onGameTap: (game) => _openDetail(context, game.appId),
-              ),
-              Gaps.v32,
-              GameSection(
-                title: 'Free to Play',
-                games: data.freeToPlay,
-                onGameTap: (game) => _openDetail(context, game.appId),
-              ),
-              Gaps.v32,
-              GameSection(
-                title: 'New & Upcoming',
-                games: data.newReleases,
-                onGameTap: (game) => _openDetail(context, game.appId),
-              ),
-            ],
-          ),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+          );
+        },
+        loading: () => const ShimmerLoading(),
         error: (error, stackTrace) => _HomeError(
           message: error.toString(),
           onRetry: () => ref.invalidate(homeSectionsProvider),
@@ -94,6 +92,56 @@ class HomeView extends ConsumerWidget {
   void _openDetail(BuildContext context, String appId) {
     context.pushNamed(AppRoute.detail.name, pathParameters: {'id': appId});
   }
+}
+
+List<Widget> _buildSections(
+  BuildContext context,
+  HomeSections data,
+  ValueChanged<GameModel> onGameTap,
+) {
+  final sections = <_HomeSectionDescriptor>[
+    _HomeSectionDescriptor(
+      games: data.discounted,
+      builder: (games) => GameSection(
+        title: 'Discounted Picks',
+        leadingEmoji: '💰',
+        games: games,
+        onGameTap: onGameTap,
+      ),
+    ),
+    _HomeSectionDescriptor(
+      games: data.freeToPlay,
+      builder: (games) => GameGridSection(
+        title: 'Free to Play',
+        leadingEmoji: '🆓',
+        games: games,
+        onGameTap: onGameTap,
+      ),
+    ),
+    _HomeSectionDescriptor(
+      games: data.newReleases,
+      builder: (games) => GameSection(
+        title: 'New & Upcoming',
+        leadingEmoji: '✨',
+        games: games,
+        onGameTap: onGameTap,
+      ),
+    ),
+  ];
+
+  final widgets = <Widget>[];
+  for (final section in sections) {
+    if (section.games.isEmpty) continue;
+    widgets.add(section.builder(section.games));
+  }
+  return widgets;
+}
+
+class _HomeSectionDescriptor {
+  const _HomeSectionDescriptor({required this.games, required this.builder});
+
+  final List<GameModel> games;
+  final Widget Function(List<GameModel> games) builder;
 }
 
 class _HomeError extends StatelessWidget {

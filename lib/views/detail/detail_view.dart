@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:steam_games/core/constants/gaps.dart';
 import 'package:steam_games/core/constants/sizes.dart';
 import 'package:steam_games/data/models/game_model.dart';
+import 'package:steam_games/utils/price_utils.dart';
 import 'package:steam_games/views/detail/detail_view_model.dart';
+import 'package:steam_games/widgets/game_async_image.dart';
 
 class DetailView extends ConsumerWidget {
   const DetailView({super.key, required this.appId});
@@ -41,28 +43,31 @@ class _DetailContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return CustomScrollView(
       slivers: [
         SliverAppBar(
           pinned: true,
+          stretch: true,
           expandedHeight: Sizes.size260,
+          leading: IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.arrow_back),
+          ),
           flexibleSpace: FlexibleSpaceBar(
-            title: Text(game.name),
-            background: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.network(game.headerImage, fit: BoxFit.cover),
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black54],
-                    ),
-                  ),
-                ),
-              ],
+            stretchModes: const [
+              StretchMode.zoomBackground,
+              StretchMode.fadeTitle,
+            ],
+            titlePadding: const EdgeInsetsDirectional.only(
+              start: Sizes.size16,
+              end: Sizes.size16,
+              bottom: Sizes.size16,
             ),
+            title: _HeaderTitle(game: game),
+            background: _HeaderHero(game: game),
           ),
           actions: [
             IconButton(
@@ -72,37 +77,97 @@ class _DetailContent extends StatelessWidget {
             ),
           ],
         ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(Sizes.size16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _PriceSection(game: game),
+        SliverPadding(
+          padding: const EdgeInsets.all(Sizes.size16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _PriceSection(game: game),
+                    Gaps.v12,
+                    Wrap(
+                      spacing: Sizes.size8,
+                      runSpacing: Sizes.size8,
+                      children: [
+                        _FactChip(icon: Icons.event, label: game.releaseDate),
+                        if (game.metacriticScore != null)
+                          _FactChip(
+                            icon: Icons.star_rate_rounded,
+                            label: 'Metacritic ${game.metacriticScore}',
+                          ),
+                        if (game.isFree)
+                          const _FactChip(
+                            icon: Icons.card_giftcard,
+                            label: 'Free to Play',
+                          ),
+                        if (game.discountPercent > 0)
+                          _FactChip(
+                            icon: Icons.local_fire_department,
+                            label: '${game.discountPercent}% off',
+                          ),
+                        if (game.steamDeckCompatibility.isNotEmpty)
+                          _FactChip(
+                            icon: Icons.gamepad_outlined,
+                            label: game.steamDeckCompatibility,
+                          ),
+                      ],
+                    ),
+                    Gaps.v16,
+                    FilledButton.icon(
+                      onPressed: () => _showStoreSnackBar(context),
+                      icon: const Icon(Icons.shopping_bag_outlined),
+                      label: const Text('View on Steam Store'),
+                    ),
+                  ],
+                ),
+              ),
+              Gaps.v16,
+              if (game.genres.isNotEmpty)
+                _SectionCard(
+                  title: 'Genres',
+                  child: _TagSection(values: game.genres),
+                ),
+              if (game.tags.isNotEmpty) ...[
                 Gaps.v16,
-                _TagSection(title: 'Genres', values: game.genres),
-                Gaps.v12,
-                _TagSection(title: 'Tags', values: game.tags),
-                Gaps.v24,
-                Text(
-                  'About this game',
-                  style: Theme.of(context).textTheme.titleMedium,
+                _SectionCard(
+                  title: 'Popular Tags',
+                  child: _TagSection(values: game.tags, dense: true),
                 ),
-                Gaps.v8,
-                Text(
-                  game.description,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                Gaps.v24,
-                _ScreenshotCarousel(screenshots: game.screenshots),
-                Gaps.v24,
-                _DetailGrid(game: game),
-                Gaps.v24,
-                _ReviewSection(game: game),
-                Gaps.v24,
-                _SupportInfo(game: game),
               ],
-            ),
+              Gaps.v16,
+              _SectionCard(
+                title: 'About this game',
+                child: Text(
+                  game.description,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              if (game.screenshots.isNotEmpty) ...[
+                Gaps.v16,
+                _SectionCard(
+                  title: 'Screenshots',
+                  padding: EdgeInsets.zero,
+                  child: _ScreenshotCarousel(screenshots: game.screenshots),
+                ),
+              ],
+              Gaps.v16,
+              _SectionCard(
+                title: 'Game details',
+                child: _DetailGrid(game: game),
+              ),
+              Gaps.v16,
+              _SectionCard(
+                title: 'Community reviews',
+                child: _ReviewSection(game: game),
+              ),
+              Gaps.v16,
+              _SectionCard(
+                title: 'Support & modes',
+                child: _SupportInfo(game: game),
+              ),
+            ]),
           ),
         ),
       ],
@@ -117,47 +182,69 @@ class _PriceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priceStyle = Theme.of(context).textTheme.headlineSmall;
-    return Row(
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.headlineMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+    final finalPriceAmount = PriceUtils.parseToInt(game.finalPrice) ?? 0;
+    final finalPriceText = game.isFree || finalPriceAmount == 0
+        ? 'Free to Play'
+        : PriceUtils.formatAmount(finalPriceAmount);
+    final originalPriceAmount = PriceUtils.parseToInt(game.originalPrice) ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(game.isFree ? 'Free to Play' : game.finalPrice, style: priceStyle),
-        Gaps.h12,
-        if (game.discountPercent > 0)
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Sizes.size8,
-              vertical: Sizes.size4,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.green.shade700,
-              borderRadius: BorderRadius.circular(Sizes.size6),
-            ),
-            child: Text(
-              '-${game.discountPercent}%',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(finalPriceText, style: titleStyle),
+            if (!game.isFree &&
+                game.discountPercent > 0 &&
+                originalPriceAmount > 0) ...[
+              Gaps.h12,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Sizes.size8,
+                  vertical: Sizes.size4,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(Sizes.size6),
+                ),
+                child: Text(
+                  '-${game.discountPercent}%',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ),
-        Gaps.h8,
-        if (!game.isFree && game.discountPercent > 0)
+            ],
+          ],
+        ),
+        if (!game.isFree &&
+            game.discountPercent > 0 &&
+            originalPriceAmount > 0) ...[
+          Gaps.v4,
           Text(
-            game.originalPrice,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            PriceUtils.formatAmount(originalPriceAmount),
+            style: theme.textTheme.bodyMedium?.copyWith(
               decoration: TextDecoration.lineThrough,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+        ],
       ],
     );
   }
 }
 
 class _TagSection extends StatelessWidget {
-  const _TagSection({required this.title, required this.values});
+  const _TagSection({required this.values, this.dense = false});
 
-  final String title;
   final List<String> values;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -165,17 +252,26 @@ class _TagSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleSmall),
-        Gaps.v8,
-        Wrap(
-          spacing: Sizes.size8,
-          runSpacing: Sizes.size8,
-          children: values.map((value) => Chip(label: Text(value))).toList(),
-        ),
-      ],
+    final theme = Theme.of(context);
+    final textStyle = dense
+        ? theme.textTheme.labelSmall
+        : theme.textTheme.labelMedium;
+    final spacing = dense ? Sizes.size6 : Sizes.size8;
+
+    return Wrap(
+      spacing: spacing,
+      runSpacing: spacing,
+      children: values
+          .map(
+            (value) => Chip(
+              label: Text(value, style: textStyle),
+              padding: const EdgeInsets.symmetric(
+                horizontal: Sizes.size12,
+                vertical: Sizes.size4,
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -191,29 +287,23 @@ class _ScreenshotCarousel extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Screenshots', style: Theme.of(context).textTheme.titleMedium),
-        Gaps.v12,
-        SizedBox(
-          height: Sizes.size200,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: screenshots.length,
-            separatorBuilder: (_, __) => Gaps.h16,
-            itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(Sizes.size16),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.network(screenshots[index], fit: BoxFit.cover),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+    return SizedBox(
+      height: Sizes.size220,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(Sizes.size16),
+        scrollDirection: Axis.horizontal,
+        itemCount: screenshots.length,
+        separatorBuilder: (_, __) => Gaps.h16,
+        itemBuilder: (context, index) {
+          return AspectRatio(
+            aspectRatio: 16 / 9,
+            child: GameAsyncImage(
+              imageUrl: screenshots[index],
+              borderRadius: BorderRadius.circular(Sizes.size16),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -243,11 +333,15 @@ class _DetailGrid extends StatelessWidget {
     ];
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Game details', style: Theme.of(context).textTheme.titleMedium),
-        Gaps.v12,
-        ...entries.map((entry) => _DetailRow(entry: entry)),
+        for (var index = 0; index < entries.length; index++) ...[
+          _DetailRow(entry: entries[index]),
+          if (index != entries.length - 1)
+            Divider(
+              height: Sizes.size24,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+        ],
       ],
     );
   }
@@ -300,31 +394,66 @@ class _ReviewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final totalReviews = game.totalReviews;
+    final totalPositive = game.totalPositive;
+    final totalNegative = game.totalNegative;
+    final positiveRatio = totalReviews == 0
+        ? 0.0
+        : totalPositive / totalReviews;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Community reviews',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        Gaps.v8,
         Row(
           children: [
-            Icon(Icons.thumb_up_alt_outlined, color: Colors.green.shade600),
+            Icon(
+              Icons.emoji_events_outlined,
+              color: theme.colorScheme.secondary,
+            ),
             Gaps.h8,
-            Text('${game.totalPositive} positive'),
+            Text(
+              game.reviewScore,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
-        Gaps.v6,
-        Row(
-          children: [
-            Icon(Icons.thumb_down_alt_outlined, color: Colors.red.shade600),
-            Gaps.h8,
-            Text('${game.totalNegative} negative'),
-          ],
+        if (totalReviews > 0) ...[
+          Gaps.v12,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(Sizes.size8),
+            child: LinearProgressIndicator(
+              value: positiveRatio.clamp(0.0, 1.0),
+              minHeight: Sizes.size12,
+              color: theme.colorScheme.primary,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            ),
+          ),
+          Gaps.v8,
+          Text(
+            '${(positiveRatio * 100).toStringAsFixed(0)}% positive over ${_formatCount(totalReviews)} reviews',
+            style: theme.textTheme.bodySmall,
+          ),
+        ] else ...[
+          Gaps.v12,
+          Text('No community reviews yet.', style: theme.textTheme.bodySmall),
+        ],
+        Gaps.v16,
+        _ReviewStatRow(
+          icon: Icons.thumb_up_alt_outlined,
+          label: 'Positive',
+          value: totalPositive,
+          color: Colors.green.shade600,
         ),
-        Gaps.v6,
-        Text('Overall: ${game.reviewScore} (${game.totalReviews} reviews)'),
+        Gaps.v12,
+        _ReviewStatRow(
+          icon: Icons.thumb_down_alt_outlined,
+          label: 'Negative',
+          value: totalNegative,
+          color: Colors.red.shade600,
+        ),
       ],
     );
   }
@@ -337,10 +466,24 @@ class _SupportInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Support', style: Theme.of(context).textTheme.titleMedium),
+        if (game.categories.isNotEmpty) ...[
+          Text('Modes', style: theme.textTheme.labelLarge),
+          Gaps.v8,
+          Wrap(
+            spacing: Sizes.size8,
+            runSpacing: Sizes.size8,
+            children: game.categories
+                .map((category) => Chip(label: Text(category)))
+                .toList(),
+          ),
+          Gaps.v16,
+        ],
+        Text('Compatibility', style: theme.textTheme.labelLarge),
         Gaps.v8,
         Wrap(
           spacing: Sizes.size12,
@@ -359,11 +502,20 @@ class _SupportInfo extends StatelessWidget {
               enabled: game.categories.contains('Online Co-op'),
             ),
             _SupportChip(
-              label: 'Controller',
+              label: 'Controller support',
               enabled: game.controllerSupport != 'None',
             ),
+            if (game.steamDeckCompatibility.isNotEmpty)
+              _SupportChip(
+                label: 'Steam Deck ${game.steamDeckCompatibility}',
+                enabled: true,
+              ),
           ],
         ),
+        Gaps.v16,
+        Text('Supported languages', style: theme.textTheme.labelLarge),
+        Gaps.v8,
+        Text(game.supportedLanguages, style: theme.textTheme.bodyMedium),
       ],
     );
   }
@@ -387,6 +539,146 @@ class _SupportChip extends StatelessWidget {
       backgroundColor: enabled
           ? Theme.of(context).colorScheme.primaryContainer
           : Theme.of(context).colorScheme.surfaceContainerHigh,
+    );
+  }
+}
+
+class _HeaderHero extends StatelessWidget {
+  const _HeaderHero({required this.game});
+
+  final GameModel game;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        GameAsyncImage(imageUrl: game.headerImage),
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x26000000), Color(0x99000000)],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderTitle extends StatelessWidget {
+  const _HeaderTitle({required this.game});
+
+  final GameModel game;
+
+  @override
+  Widget build(BuildContext context) {
+    final genreLabel = game.genres.take(3).join(' • ');
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge?.copyWith(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      height: 1.1,
+    );
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+      color: Colors.white70,
+      height: 1.1,
+    );
+
+    return Text.rich(
+      TextSpan(
+        text: game.name,
+        style: titleStyle,
+        children: genreLabel.isNotEmpty
+            ? [TextSpan(text: '\n$genreLabel', style: subtitleStyle)]
+            : null,
+      ),
+      maxLines: genreLabel.isNotEmpty ? 2 : 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.child, this.title, this.padding});
+
+  final Widget child;
+  final String? title;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: padding ?? const EdgeInsets.all(Sizes.size16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(Sizes.size16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Text(title!, style: theme.textTheme.titleMedium),
+            Gaps.v12,
+          ],
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _FactChip extends StatelessWidget {
+  const _FactChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    if (label.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Chip(
+      avatar: Icon(icon, size: Sizes.size18),
+      label: Text(label),
+    );
+  }
+}
+
+class _ReviewStatRow extends StatelessWidget {
+  const _ReviewStatRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final int value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icon, color: color),
+        Gaps.h12,
+        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
+        Text(
+          _formatCount(value),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -421,4 +713,14 @@ void _showStoreSnackBar(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(content: Text('Steam Store launch will be added later.')),
   );
+}
+
+String _formatCount(int value) {
+  if (value >= 1000000) {
+    return '${(value / 1000000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')}M';
+  }
+  if (value >= 1000) {
+    return '${(value / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')}K';
+  }
+  return value.toString();
 }

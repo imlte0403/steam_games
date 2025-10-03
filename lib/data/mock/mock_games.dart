@@ -7,8 +7,8 @@ const mockGames = <GameModel>[
     headerImage:
         'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
     screenshots: [
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/730/ss_e4be31c2ddc056f75b6df24d3d736609a2e0290a.600x338.jpg',
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/730/ss_68c0c7781d78b810e16a3a836b6b5480bec219c2.600x338.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/730/capsule_616x353.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg',
     ],
     description:
         'The classic competitive shooter returns with global offensive gameplay.',
@@ -34,6 +34,8 @@ const mockGames = <GameModel>[
     totalPositive: 6000000,
     totalNegative: 1000000,
     totalReviews: 7000000,
+    ratingScore: 4.5,
+    playerCount: '1M+',
   ),
   GameModel(
     appId: '570',
@@ -41,8 +43,8 @@ const mockGames = <GameModel>[
     headerImage:
         'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
     screenshots: [
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/570/ss_2bfbd35276ac44b604d1589ab0da8228a64a96b1.600x338.jpg',
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/570/ss_4dc22b2f8a5d01d86252cad70d739049b61d50cf.600x338.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/570/capsule_616x353.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg',
     ],
     description: 'The multiplayer battle arena that defined the genre.',
     releaseDate: '9 Jul, 2013',
@@ -67,6 +69,8 @@ const mockGames = <GameModel>[
     totalPositive: 7000000,
     totalNegative: 500000,
     totalReviews: 7500000,
+    ratingScore: 4.7,
+    playerCount: '800K+',
   ),
   GameModel(
     appId: '413150',
@@ -74,8 +78,8 @@ const mockGames = <GameModel>[
     headerImage:
         'https://cdn.cloudflare.steamstatic.com/steam/apps/413150/header.jpg',
     screenshots: [
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/413150/ss_173a4bee2ca2fdc5dbe5e85c9b613b7b0ed95d99.600x338.jpg',
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/413150/ss_f7e0a4a8dc060fa3ba454d24a2f3e0a1b5c6b6e4.600x338.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/413150/capsule_616x353.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/413150/header.jpg',
     ],
     description: 'A farming RPG with endless possibilities and cozy vibes.',
     releaseDate: '26 Feb, 2016',
@@ -100,6 +104,8 @@ const mockGames = <GameModel>[
     totalPositive: 500000,
     totalNegative: 10000,
     totalReviews: 510000,
+    ratingScore: 4.9,
+    playerCount: '250K+',
   ),
   GameModel(
     appId: '1086940',
@@ -107,8 +113,8 @@ const mockGames = <GameModel>[
     headerImage:
         'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/header.jpg',
     screenshots: [
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/ss_0a8c11b3ae2eed28cf074d6ba837abd0261bdb82.600x338.jpg',
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/ss_3e2deca4c283b5b022059f25577f1c4ceb8590bc.600x338.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/capsule_616x353.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/header.jpg',
     ],
     description:
         'An epic party-based RPG set in the world of Dungeons & Dragons.',
@@ -134,6 +140,8 @@ const mockGames = <GameModel>[
     totalPositive: 400000,
     totalNegative: 20000,
     totalReviews: 420000,
+    ratingScore: 4.8,
+    playerCount: '500K+',
   ),
   GameModel(
     appId: '1245620',
@@ -141,8 +149,8 @@ const mockGames = <GameModel>[
     headerImage:
         'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg',
     screenshots: [
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/ss_0f23fbea7f2a7bc01db57a97dc0b1819b7358126.600x338.jpg',
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/ss_509d9a741b93d7c5edda6afdd1fb26a40cc1a2dd.600x338.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/capsule_616x353.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg',
     ],
     description:
         'Adventure through the Lands Between in FromSoftware\'s open world.',
@@ -168,6 +176,8 @@ const mockGames = <GameModel>[
     totalPositive: 600000,
     totalNegative: 45000,
     totalReviews: 645000,
+    ratingScore: 4.6,
+    playerCount: '700K+',
   ),
   GameModel(
     appId: '999999',
@@ -175,8 +185,8 @@ const mockGames = <GameModel>[
     headerImage:
         'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg',
     screenshots: [
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/ss_2f9d19f1ae161d9d94f9d182d4c8768e7fe69a87.600x338.jpg',
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/ss_1a7d5d14318e403d315f0dce274164a491091696.600x338.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/capsule_616x353.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg',
     ],
     description: 'Futuristic runner with roguelite elements and neon visuals.',
     releaseDate: '18 Feb, 2024',
@@ -201,6 +211,8 @@ const mockGames = <GameModel>[
     totalPositive: 1200,
     totalNegative: 300,
     totalReviews: 1500,
+    ratingScore: 3.8,
+    playerCount: '2K+',
   ),
   GameModel(
     appId: '777777',
@@ -208,8 +220,8 @@ const mockGames = <GameModel>[
     headerImage:
         'https://cdn.cloudflare.steamstatic.com/steam/apps/477160/header.jpg',
     screenshots: [
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/477160/ss_18d2c86d7beb5c0cfa5bbc7f6166ed476cd10762.600x338.jpg',
-      'https://cdn.cloudflare.steamstatic.com/steam/apps/477160/ss_df74d1a4d7a8f9c02d12f72771b5e70c1abcb797.600x338.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/477160/capsule_616x353.jpg',
+      'https://cdn.cloudflare.steamstatic.com/steam/apps/477160/header.jpg',
     ],
     description: 'Co-op space shooter with dynamic missions and base building.',
     releaseDate: 'Coming Soon',
@@ -234,5 +246,7 @@ const mockGames = <GameModel>[
     totalPositive: 0,
     totalNegative: 0,
     totalReviews: 0,
+    ratingScore: null,
+    playerCount: 'TBA',
   ),
 ];

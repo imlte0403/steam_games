@@ -36,6 +36,9 @@ dependencies:
   # 이미지 캐싱
   cached_network_image: ^3.3.0
 
+  # 스켈레톤 로딩
+  shimmer: ^3.0.0
+
 
 dev_dependencies:
   # 코드 생성
